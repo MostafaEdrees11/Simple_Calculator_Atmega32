@@ -34,6 +34,8 @@ s32 CALCULATOR_Help = 0;
 s32 CALCULATOR_BASE = 10;
 u8 CALCULATOR_KEYPAD_CHARACTER = 0;
 
+u8 Number_Is_Neg = 0;
+
 /**
  ******************************************************************************
  * @Fn			: CALCULATOR_vidRun
@@ -198,16 +200,35 @@ void CALCULATOR_vidGetOP_OPCODE(void)
 			case CALCULATOR_SUB:
 			case CALCULATOR_MULTI:
 			case CALCULATOR_DIV:
-			CALCULATOR_OPCODE = CALCULATOR_KEYPAD_CHARACTER;		/* save value of opcode */
-			CALCULATOR_OP1 = CALCULATOR_OP;							/* save value of op1 */
-			CALCULATOR_OP = 0;										/* zero of op to use it to calculate op2 */
-			LCD_enuDisplayChar(CALCULATOR_KEYPAD_CHARACTER);		/* display the opcode on lcd */
+			if(CALCULATOR_KEYPAD_CHARACTER == '-' && !Number_Is_Neg)	/* check if the user enter negative sign */
+			{
+				LCD_enuDisplayChar(CALCULATOR_KEYPAD_CHARACTER);
+				Number_Is_Neg = 1;										/* rise the flag to know that the number is has a '-' before it */
+			}
+			else
+			{	
+				CALCULATOR_OPCODE = CALCULATOR_KEYPAD_CHARACTER;		/* save value of opcode */
+				CALCULATOR_OP1 = CALCULATOR_OP;							/* save value of op1 */
+				CALCULATOR_OP = 0;										/* zero of op to use it to calculate op2 */
+				LCD_enuDisplayChar(CALCULATOR_KEYPAD_CHARACTER);		/* display the opcode on lcd */
+				
+				if(Number_Is_Neg)										/* check the flag */
+				{
+					CALCULATOR_OP1 *= -1;								/* Multiply op1 by -1 because the flag is 1 */
+					Number_Is_Neg = 0;									/* Down the flag */
+				}
+			}
 			break;
 			
 			/* equal case */
 			case CALCULATOR_EQUAL:
 			CALCULATOR_OP2 = CALCULATOR_OP;							/* save value of op2 */
 			LCD_enuDisplayChar(CALCULATOR_KEYPAD_CHARACTER);		/* display '=' on lcd */
+			if(Number_Is_Neg)										/* check the flag */
+			{
+				CALCULATOR_OP2 *= -1;								/* Multiply op2 by -1 because the flag is 1 */
+				Number_Is_Neg = 0;									/* Down the flag */
+			}
 			CALCULATOR_vidCalcResult();								/* calculate the result */
 			CALCULATOR_vidRestart();								/* restart calculator when user press ON/C */
 			break;
