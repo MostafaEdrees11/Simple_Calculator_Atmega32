@@ -14,28 +14,28 @@ ___
 ### Basic Operations:
 The calculator supports fundamental arithmetic operations, including addition, subtraction, multiplication, and division.
 
-![gitHub]()
+![gitHub](https://github.com/MostafaEdrees11/Simple_Calculator_Atmega32/blob/master/Simple%20Calculator/Proteus/Simulation/Basic%20Operations.gif)
 
 ### Multi-Digit Operands:
 Operands can be more than one digit, allowing users to input and calculate with larger numbers.
 
-![gitHub]()
+![gitHub](https://github.com/MostafaEdrees11/Simple_Calculator_Atmega32/blob/master/Simple%20Calculator/Proteus/Simulation/Multi-Digit%20Operands.gif)
 
 ### Handling Negative Numbers:
 The calculator can handle negative numbers, enabling users to perform operations with positive and negative values.
 
-![gitHub]()
+![gitHub](https://github.com/MostafaEdrees11/Simple_Calculator_Atmega32/blob/master/Simple%20Calculator/Proteus/Simulation/Handling%20Negative%20Numbers.gif)
 
 ### Memory of Last Value:
 The calculator retains the last calculated value, allowing users to use it in subsequent operations without re-entering.
 
-![gitHub]()
+![gitHub](https://github.com/MostafaEdrees11/Simple_Calculator_Atmega32/blob/master/Simple%20Calculator/Proteus/Simulation/Memory%20of%20Last%20Value.gif)
 
 ### Division Handling:
 Division results are displayed with an integer part and two numbers for the fractional part. 
 Additionally, the calculator detects and handles math errors when attempting to divide by zero.
 
-![gitHub]()
+![gitHub](https://github.com/MostafaEdrees11/Simple_Calculator_Atmega32/blob/master/Simple%20Calculator/Proteus/Simulation/Division%20Handling.gif)
 
 ___
 
@@ -47,4 +47,4 @@ ___
 ## Company
 ### [CAT Reloaded Embedded Circle](https://www.linkedin.com/company/cat-reloaded/mycompany/)
 
-![gitHub]()
+![gitHub](https://github.com/MostafaEdrees11/Simple_Calculator_Atmega32/blob/master/Simple%20Calculator/Proteus/Simulation/CAT.png)
