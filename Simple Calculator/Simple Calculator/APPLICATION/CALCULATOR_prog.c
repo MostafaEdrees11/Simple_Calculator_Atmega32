@@ -21,19 +21,25 @@
 
 #include <util/delay.h>
 
-u8 CALCULATOR_u8OnOff = 0;
+/* INITIAL_VALUE is equal zero */
 
-s32 CALCULATOR_OP1 = 0;
-s32 CALCULATOR_OP2 = 0;
-s32 CALCULATOR_OP = 0;
-u8 CALCULATOR_OPCODE = 0;
-s32 CALCULATOR_RES = 0;
-u8 RES_u8Pos = 0;
+/* control variable */
+u8 CALCULATOR_u8OnOff = INITIAL_VALUE;
 
-s32 CALCULATOR_Help = 0;
-s32 CALCULATOR_BASE = 10;
-u8 CALCULATOR_KEYPAD_CHARACTER = 0;
+/* the basic operands & operators variables */
+s32 CALCULATOR_OP1 = INITIAL_VALUE;
+s32 CALCULATOR_OP2 = INITIAL_VALUE;
+s32 CALCULATOR_OP = INITIAL_VALUE;
+u8 CALCULATOR_OPCODE = INITIAL_VALUE;
+s32 CALCULATOR_RES = INITIAL_VALUE;
+u8 RES_u8Pos = INITIAL_VALUE;
 
+/* */
+s32 CALCULATOR_Help = INITIAL_VALUE;
+s32 CALCULATOR_BASE = DECIMAL_BASE;
+u8 CALCULATOR_KEYPAD_CHARACTER = INITIAL_VALUE;
+
+/* It is a flag rised when we enter - to consider that the number is negative */
 u8 Number_Is_Neg = 0;
 
 /**
@@ -65,6 +71,86 @@ void CALCULATOR_vidRun(void)
 
 	/* Get the operands and opcode of the calculator */	
 	CALCULATOR_vidGetOP_OPCODE();
+}
+
+/**
+ ******************************************************************************
+ * @Fn			: CALCULATOR_vidGetOP_OPCODE
+ * @brief		: it is used to get parameters of the operations
+ * @param [in]	: none
+ * @retval		: none
+ * @note		: none
+ ******************************************************************************
+**/
+void CALCULATOR_vidGetOP_OPCODE(void)
+{
+	/* Loop until the user enter '=' */
+	while(1)
+	{
+		CALCULATOR_KEYPAD_CHARACTER = KEYPAD_u8GetPressedKey();
+		
+		switch(CALCULATOR_KEYPAD_CHARACTER)
+		{
+			/* opcode case */
+			case CALCULATOR_ADD:
+			case CALCULATOR_SUB:
+			case CALCULATOR_MULTI:
+			case CALCULATOR_DIV:
+			if(CALCULATOR_KEYPAD_CHARACTER == '-' && !Number_Is_Neg && !CALCULATOR_OP)	/* check if the user enter negative sign */
+			{
+				LCD_enuDisplayChar(CALCULATOR_KEYPAD_CHARACTER);
+				Number_Is_Neg = 1;										/* rise the flag to know that the number is has a '-' before it */
+			}
+			else
+			{	
+				CALCULATOR_OPCODE = CALCULATOR_KEYPAD_CHARACTER;		/* save value of opcode */
+				CALCULATOR_OP1 = CALCULATOR_OP;							/* save value of op1 */
+				CALCULATOR_OP = 0;										/* zero of op to use it to calculate op2 */
+				LCD_enuDisplayChar(CALCULATOR_KEYPAD_CHARACTER);		/* display the opcode on lcd */
+				
+				if(Number_Is_Neg)										/* check the flag */
+				{
+					CALCULATOR_OP1 *= -1;								/* Multiply op1 by -1 because the flag is 1 */
+					Number_Is_Neg = 0;									/* Down the flag */
+				}
+			}
+			break;
+			
+			/* equal case */
+			case CALCULATOR_EQUAL:
+			CALCULATOR_OP2 = CALCULATOR_OP;							/* save value of op2 */
+			LCD_enuDisplayChar(CALCULATOR_KEYPAD_CHARACTER);		/* display '=' on lcd */
+			if(Number_Is_Neg)										/* check the flag */
+			{
+				CALCULATOR_OP2 *= -1;								/* Multiply op2 by -1 because the flag is 1 */
+				Number_Is_Neg = 0;									/* Down the flag */
+			}
+			CALCULATOR_vidCalcResult();								/* calculate the result */
+			CALCULATOR_vidRestart();								/* restart calculator when user press ON/C */
+			break;
+			
+			/* numbers case */
+			case NUMBER_0:
+			case NUMBER_1:
+			case NUMBER_2:
+			case NUMBER_3:
+			case NUMBER_4:
+			case NUMBER_5:
+			case NUMBER_6:
+			case NUMBER_7:
+			case NUMBER_8:
+			case NUMBER_9:
+			CALCULATOR_Help = CALCULATOR_KEYPAD_CHARACTER - NUMBER_0;						/* get the integer value of character */
+			CALCULATOR_OP = (CALCULATOR_OP * CALCULATOR_BASE) + CALCULATOR_Help;			/* calculate the value if number if its more than one digit */
+			LCD_enuDisplayChar(CALCULATOR_KEYPAD_CHARACTER);								/* display digit on lcd */
+			break;
+			
+			/* this used in case of the use need to clear lcd when it enters a wrong number */
+			case CALCULATOR_ON:
+			CALCULATOR_vidRestart();
+			break;
+		}
+	}
 }
 
 /**
@@ -139,6 +225,26 @@ void CALCULATOR_vidCalcResult(void)
 
 /**
  ******************************************************************************
+ * @Fn			: CALCULATOR_vidGetResultPosition
+ * @brief		: it is used to get the position of the result to print it at the end of 2nd line
+ * @param [in]	: Copy_s32Res --> it is the value of the result.
+ * @retval		: none
+ * @note		: none
+ ******************************************************************************
+**/
+void CALCULATOR_vidGetResultPosition(s32 Copy_s32Res)
+{
+	/* check the value of the result */
+	if(Copy_s32Res > 0)
+		RES_u8Pos = 16 - floor(log10(Copy_s32Res)+1);				/* log10(num) --> return (number of digit - 1) but in float form */
+	else if(Copy_s32Res < 0)
+		RES_u8Pos = 16 - (floor(log10(-Copy_s32Res)+1)+1);			/* Don't forget '-' sign */
+	else
+		RES_u8Pos = 15;
+}
+
+/**
+ ******************************************************************************
  * @Fn			: CALCULATOR_vidRestart
  * @brief		: it is used to restart the calculator
  * @param [in]	: none
@@ -175,104 +281,4 @@ void CALCULATOR_vidRestart(void)
 	}
 	LCD_vidClearScreen();
 	CALCULATOR_RES = 0;
-}
-
-/**
- ******************************************************************************
- * @Fn			: CALCULATOR_vidGetOP_OPCODE
- * @brief		: it is used to get parameters of the operations
- * @param [in]	: none
- * @retval		: none
- * @note		: none
- ******************************************************************************
-**/
-void CALCULATOR_vidGetOP_OPCODE(void)
-{
-	/* Loop until the user enter '=' */
-	while(CALCULATOR_KEYPAD_CHARACTER != CALCULATOR_EQUAL)
-	{
-		CALCULATOR_KEYPAD_CHARACTER = KEYPAD_u8GetPressedKey();
-		
-		switch(CALCULATOR_KEYPAD_CHARACTER)
-		{
-			/* opcode case */
-			case CALCULATOR_ADD:
-			case CALCULATOR_SUB:
-			case CALCULATOR_MULTI:
-			case CALCULATOR_DIV:
-			if(CALCULATOR_KEYPAD_CHARACTER == '-' && !Number_Is_Neg)	/* check if the user enter negative sign */
-			{
-				LCD_enuDisplayChar(CALCULATOR_KEYPAD_CHARACTER);
-				Number_Is_Neg = 1;										/* rise the flag to know that the number is has a '-' before it */
-			}
-			else
-			{	
-				CALCULATOR_OPCODE = CALCULATOR_KEYPAD_CHARACTER;		/* save value of opcode */
-				CALCULATOR_OP1 = CALCULATOR_OP;							/* save value of op1 */
-				CALCULATOR_OP = 0;										/* zero of op to use it to calculate op2 */
-				LCD_enuDisplayChar(CALCULATOR_KEYPAD_CHARACTER);		/* display the opcode on lcd */
-				
-				if(Number_Is_Neg)										/* check the flag */
-				{
-					CALCULATOR_OP1 *= -1;								/* Multiply op1 by -1 because the flag is 1 */
-					Number_Is_Neg = 0;									/* Down the flag */
-				}
-			}
-			break;
-			
-			/* equal case */
-			case CALCULATOR_EQUAL:
-			CALCULATOR_OP2 = CALCULATOR_OP;							/* save value of op2 */
-			LCD_enuDisplayChar(CALCULATOR_KEYPAD_CHARACTER);		/* display '=' on lcd */
-			if(Number_Is_Neg)										/* check the flag */
-			{
-				CALCULATOR_OP2 *= -1;								/* Multiply op2 by -1 because the flag is 1 */
-				Number_Is_Neg = 0;									/* Down the flag */
-			}
-			CALCULATOR_vidCalcResult();								/* calculate the result */
-			CALCULATOR_vidRestart();								/* restart calculator when user press ON/C */
-			break;
-			
-			/* numbers case */
-			case NUMBER_0:
-			case NUMBER_1:
-			case NUMBER_2:
-			case NUMBER_3:
-			case NUMBER_4:
-			case NUMBER_5:
-			case NUMBER_6:
-			case NUMBER_7:
-			case NUMBER_8:
-			case NUMBER_9:
-			CALCULATOR_Help = CALCULATOR_KEYPAD_CHARACTER - NUMBER_0;						/* get the integer value of character */
-			CALCULATOR_OP = (CALCULATOR_OP * CALCULATOR_BASE) + CALCULATOR_Help;			/* calculate the value if number if its more than one digit */
-			LCD_enuDisplayChar(CALCULATOR_KEYPAD_CHARACTER);								/* display digit on lcd */
-			break;
-			
-			/* this used in case of the use need to clear lcd when it enters a wrong number */
-			case CALCULATOR_ON:
-			CALCULATOR_vidRestart();
-			break;
-		}
-	}
-}
-
-/**
- ******************************************************************************
- * @Fn			: CALCULATOR_vidGetResultPosition
- * @brief		: it is used to get the position of the result to print it at the end of 2nd line
- * @param [in]	: Copy_s32Res --> it is the value of the result.
- * @retval		: none
- * @note		: none
- ******************************************************************************
-**/
-void CALCULATOR_vidGetResultPosition(s32 Copy_s32Res)
-{
-	/* check the value of the result */
-	if(Copy_s32Res > 0)
-		RES_u8Pos = 16 - floor(log10(Copy_s32Res)+1);				/* log10(num) --> return (number of digit - 1) but in float form */
-	else if(Copy_s32Res < 0)
-		RES_u8Pos = 16 - (floor(log10(-Copy_s32Res)+1)+1);			/* Don't forget '-' sign */
-	else
-		RES_u8Pos = 15;
 }

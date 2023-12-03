@@ -30,6 +30,9 @@
 #define NUMBER_8									'8'
 #define NUMBER_9									'9'
 
+#define INITIAL_VALUE								0
+#define DECIMAL_BASE								10
+
 void CALCULATOR_vidCalcResult(void);
 void CALCULATOR_vidRestart(void);
 void CALCULATOR_vidGetOP_OPCODE(void);
